@@ -10,32 +10,40 @@
 #*****************************************************************************
 
 #------------------------------------------------------------------------------
-# <Put a Description Here>
+# MAKEFILE : Week-2 Assignment Project
 #
 # Use: make [TARGET] [PLATFORM-OVERRIDES]
 #
 # Build Targets:
-#      <Put a description of the supported targets here>
+#      MSP432: msp432p401r.lds / Host: DMSP432
 #
-# Platform Overrides:
-#      <Put a description of the supported Overrides here
+# Platform Overrides
+#      
 #
 #------------------------------------------------------------------------------
 include sources.mk
 
 # Platform Overrides
-PLATFORM = 
+PLATFORM = MSP432
+
+	ifeq ($(PLATFORM),MSP432)
+		CC = arm-none-eabi-gcc
+		# etc
+	else
+		CC = gcc
+		# etc
+	endif
 
 # Architectures Specific Flags
-LINKER_FILE = 
-CPU = 
-ARCH = 
-SPECS = 
+LINKER_FILE = -T msp432p401r.lds
+CPU = -mcpu=cortex-m4
+ARCH = -mthumb
+SPECS = --specs=nosys.specs
 
 # Compiler Flags and Defines
-CC = 
+CC = arm-none-eabi-gcc
 LD = 
-LDFLAGS = 
-CFLAGS = 
+LDFLAGS = -Wl
+CFLAGS = -Wall -g -mthumb
 CPPFLAGs = 
 
