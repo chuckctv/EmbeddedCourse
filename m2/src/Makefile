@@ -8,42 +8,74 @@
 # misuse of this material. 
 #
 #*****************************************************************************
-
-#------------------------------------------------------------------------------
-# MAKEFILE : Week-2 Assignment Project
-#
-# Use: make [TARGET] [PLATFORM-OVERRIDES]
-#
-# Build Targets:
-#      MSP432: msp432p401r.lds / Host: DMSP432
-#
-# Platform Overrides
-#      
-#
-#------------------------------------------------------------------------------
+PLATFORM = HOST
 include sources.mk
+BASENAME = C1M2
+TARGET = $(BASENAME).out
+CFLAGS = 		\
+-Wall 	\
+-Werror	\
+-O0			\
+-g			\
+-std=c99
+LDFLAGS = 							\
+-Wl,-Map=$(BASENAME).map
 
-# Platform Overrides
-PLATFORM = MSP432
+ifeq ($(PLATFORM),HOST)
 
-	ifeq ($(PLATFORM),MSP432)
-		CC = arm-none-eabi-gcc
-		# etc
-	else
-		CC = gcc
-		# etc
-	endif
+CC = gcc
+LD = ld
+SZ = size
+else
 
-# Architectures Specific Flags
-LINKER_FILE = -T msp432p401r.lds
-CPU = -mcpu=cortex-m4
-ARCH = -mthumb
-SPECS = --specs=nosys.specs
-
-# Compiler Flags and Defines
 CC = arm-none-eabi-gcc
-LD = 
-LDFLAGS = -Wl
-CFLAGS = -Wall -g -mthumb
-CPPFLAGs = 
+LD = arm-none-eabi-ld
+SZ = arm-none-eabi-size
+LDFLAGS += -T ../msp432p401r.lds
+CPU = cortex-m4
+ARCH = thumb
+SPECS = nosys.specs
+
+CFLAGS +=  						\
+-mcpu=$(CPU)			\
+-m$(ARCH)					\
+-march=armv7e-m 	\
+-mfloat-abi=hard 	\
+-mfpu=fpv4-sp-d16 \
+--specs=$(SPECS)
+
+endif
+
+LINKER_FILE = $(PLATFORM).map
+CPPFLAGS = -E 
+
+OBJS = $(SOURCES:.c=.o)
+ASMS = $(SOURCES:.c=.asm)
+
+%.i:  %.c
+	$(CC) $< $(CPPFLAGS) $(INCLUDES) -D$(PLATFORM) -o $@
+
+%.asm:  %.i
+	$(CC) $< -S -o $@
+
+%.o:  %.c
+	$(CC) -c $< $(CFLAGS) $(INCLUDES) -D$(PLATFORM) -o $@
+
+.PHONY: compile-all
+compile-all: $(OBJS)
+
+.PHONY: build
+build: all
+
+.PHONY: all
+all: $(TARGET)
+
+$(TARGET): $(OBJS) 
+	$(CC) $(OBJS) $(CFLAGS) $(LDFLAGS) -o $@
+	$(SZ) -Atd $@
+
+.PHONY: clean
+clean:
+	rm -f *.i *.asm *.o *.out *.map
+
 
